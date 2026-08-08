@@ -1,0 +1,169 @@
+/* ============================================================
+   DESIGN DIRECTION — "غرفة العمليات" (Field Command Console)
+
+   Subject:  a live dispatch console watched for full shifts by health
+             managers deciding where ambulances go, right now, in Syria.
+   Tone:     grounded night-ops instrument panel — not sci-fi decoration,
+             functional high-contrast chrome built for hours of scanning.
+   Signature: facility nodes that breathe/pulse by occupancy state, and a
+             full-width tape-deck time scrubber instead of a generic slider.
+   ============================================================ */
+
+:root {
+  /* ---- Color: named tokens, IDE/instrument-panel inspired ---- */
+  --void: #0a0e0c;         /* base background — near-black, green-black cast */
+  --panel: #101512;        /* console panel surface */
+  --panel-raised: #141a17; /* hovered/active panel surface */
+  --line: #223028;         /* hairline borders / grid */
+  --line-bright: #33473c;  /* emphasized borders */
+  --ink: #eef2ee;          /* primary text — warm off-white, not pure #fff */
+  --ink-dim: #7e9086;      /* secondary text / labels */
+  --ink-faint: #4d5c53;    /* tertiary / disabled */
+
+  --status-green: #34d399; /* GREEN facility, phosphor green */
+  --status-green-glow: rgba(52, 211, 153, 0.35);
+  --status-amber: #f5a623; /* EN_ROUTE / warning */
+  --status-amber-glow: rgba(245, 166, 35, 0.35);
+  --status-red: #e6483a;   /* RED facility — critical */
+  --status-red-glow: rgba(230, 72, 58, 0.45);
+  --accent: #2dd4bf;       /* interactive accent — routes, focus, links */
+  --accent-glow: rgba(45, 212, 191, 0.3);
+
+  --font-display: var(--font-arabic), 'Tahoma', sans-serif;
+  --font-body: var(--font-arabic), 'Tahoma', sans-serif;
+  --font-data: var(--font-mono), ui-monospace, monospace;
+
+  --radius: 3px; /* deliberately near-square — instrument chrome, not app-y rounded cards */
+  --scan-opacity: 0.04;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ---- Atmosphere: scanlines + range-ring grid mesh, both very quiet ---- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, var(--scan-opacity)) 0px,
+    rgba(255, 255, 255, var(--scan-opacity)) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 78% 15%, rgba(45, 212, 191, 0.06), transparent 40%),
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 64px 64px, 64px 64px;
+  opacity: 0.35;
+}
+
+::selection {
+  background: var(--accent-glow);
+  color: var(--ink);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-bright);
+  border-radius: var(--radius);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Data typography utility — for numbers, codes, timestamps ---- */
+.data-mono {
+  font-family: var(--font-data);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Boot sequence: staggered reveal on load ---- */
+@keyframes boot-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.boot-1 { animation: boot-in 0.5s ease-out 0.05s both; }
+.boot-2 { animation: boot-in 0.5s ease-out 0.18s both; }
+.boot-3 { animation: boot-in 0.5s ease-out 0.30s both; }
+.boot-4 { animation: boot-in 0.5s ease-out 0.42s both; }
+
+/* ---- Status pulse — the signature element ---- */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 var(--ring-color, var(--status-red-glow)); }
+  70% { box-shadow: 0 0 0 14px rgba(0, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+.pulse-red {
+  --ring-color: var(--status-red-glow);
+  animation: pulse-ring 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pulse-amber {
+  --ring-color: var(--status-amber-glow);
+  animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes live-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.live-dot {
+  animation: live-dot 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
